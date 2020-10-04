@@ -164,7 +164,7 @@ int net_save(struct net *net, char *path)
 			continue;
 		}
 		for(int j = 0; j < layer_i->neurous_num; j++)
-			fprintf(file, "%lf ", layer_i->biases[j]);
+			fprintf(file, "%.16lf ", layer_i->biases[j]);
 		fprintf(file, "\nlayer%d end.\n\n", i);
 	}
 
@@ -173,7 +173,7 @@ int net_save(struct net *net, char *path)
 		struct link *link_i = net->links + i;
 		fprintf(file, "link%d : %d weights.\n", i, link_i->link_num);
 		for (int j = 0; j < link_i->link_num; j++)
-			fprintf(file, "%lf ",link_i->weights[j]);
+			fprintf(file, "%.16lf ",link_i->weights[j]);
 		fprintf(file, "\nlink%d end.\n\n", i);
 	}
 
@@ -290,8 +290,10 @@ double sigmoid_func(double x)
 /* Derivative of the sigmoid function. */
 double sigmoid_prime_func(double x)
 {
-	double temp = (1.0+exp(-x));
-        return exp(-x) / (temp * temp);
+
+	return sigmoid_func(x) * (1 - sigmoid_func(x));
+	//double temp = (1.0+exp(-x));
+        //return exp(-x) / (temp * temp);
 }
 
 
@@ -356,62 +358,64 @@ void propagate(struct net *net)
 		layer_forward(net, net->links + i);
 }
 
-void net_cacu_err(struct net *net, double **b_err, double **w_err)
+void layer_cacu_err(struct net *net, struct link *link,
+						double *b_err, double *w_err)
 {
-	/* layer.activ is used to save errors in this function */
-	int layer_num = net->layer_num;
-	
-	for (int i = layer_num - 1; i > 0; i--) {
-		int neu_num = net->layers[i].neurous_num;
-		int prev_neu_mum = net->layers[i-1].neurous_num;
-		struct layer *l = net->layers + i;
-		double *link_w = (net->links + i - 1)->weights;
-		struct layer *prev_l = net->layers + i - 1;
-		for (int j = 0; j < neu_num; j++) {
-			/* caculate the error of biases and save it to b_err*/
-			l->activ[j] *= net->activ_func(l->nt[j]);
-			b_err[i-1][j] += l->activ[j];
+	struct layer *layer_n = link->next;
+	struct layer *layer_p = link->prev;
+	for(int i = 0; i < layer_n->neurous_num; i++) {
+		layer_n->activ[i] *= net->fb_func(layer_n->nt[i]);
+		b_err[i] += layer_n->activ[i];
 
-			/* caculate the error of weights and save it to w_err*/
-			for (int k = 0; k < prev_neu_mum; k++) {
-				int w_offset = prev_neu_mum * j + k;
-				w_err[i-1][w_offset] +=
-						l->activ[j] * prev_l->activ[k];
-			}
+		for(int j = 0; j < layer_p->neurous_num; j++) {
+			unsigned int w_index = layer_p->neurous_num * i + j;
+			w_err[w_index] += layer_n->activ[i] * layer_p->activ[j];
 		}
-
-		if(i > 1) {
-			/* trans the err to front layer */
-			memset(prev_l->activ, 0, sizeof(double) * prev_neu_mum);
-			for (int j = 0; j <  prev_neu_mum; j++) {
-				for (int k = 0; k < neu_num; k++) {
-					int w_offset = prev_neu_mum * k + j;
-					prev_l->activ[j] += 
-						link_w[w_offset] * l->activ[k];
-				}
-				prev_l->activ[j] *= 
-						net->fb_func(prev_l->activ[j]);
-			}
-		}	
 	}
 }
 
-void net_update(struct net *net, double **b_err, double **w_err, double speed)
+void layer_trans_err(struct net *net, struct link *link)
+{
+	struct layer *layer_n = link->next;
+	struct layer *layer_p = link->prev;
+	double *w = link->weights;
+
+	memset(layer_p->activ, 0, sizeof(double) * layer_p->neurous_num);
+	for (int i = 0; i < layer_p->neurous_num; i++) {
+		for (int j = 0; j < layer_n->neurous_num; j++) {
+			int w_offset = layer_n->neurous_num * j + i;
+			layer_p->activ[i] += w[w_offset] * layer_n->activ[j];
+		}
+		layer_p->activ[i] *= net->fb_func(layer_n->activ[i]);
+	}
+}
+
+void net_cacu_err(struct net *net, double **b_err, double **w_err)
+{
+	for (int i = net->layer_num - 2; i > 0; i--) {
+		layer_cacu_err(net, net->links + i, b_err[i + 1], w_err[i]);
+		layer_trans_err(net, net->links + i);
+	}
+	
+	layer_cacu_err(net, net->links, b_err[1], w_err[0]);
+}
+
+void net_update(struct net *net, double **b_err, double **w_err, double eta)
 {	
 	int layer_num = net->layer_num;
 	for(int i = 1; i <layer_num; i++) {
 		/* updata biases */
 		int b_len = net->layers[i].neurous_num;
 		double *biases_i = net->layers[i].biases;
-		double *b_err_i = b_err[i - 1];
-		array_wsub(biases_i, b_err_i, biases_i, speed, b_len);
+		double *b_err_i = b_err[i];
+		array_wsub(biases_i, b_err_i, biases_i, eta, b_len);
 
 		/* updata weights */
 		int w_len = net->layers[i - 1].neurous_num * 
 						net->layers[i].neurous_num;
 		double *weights_i = net->links[i - 1].weights;
 		double *w_err_i = w_err[i -1];
-		array_wsub(weights_i, w_err_i, weights_i, speed, w_len);
+		array_wsub(weights_i, w_err_i, weights_i, eta, w_len);
 	}
 }
 
@@ -423,7 +427,7 @@ int batch_train(struct net *net, struct data_pack *data, const double *target,
 	double *input = net->layers[0].activ;
 
 	/* biases in first layer is useless. */
-	double **b_err = malloc(sizeof(double *) * (layer_num - 1));  	
+	double **b_err = malloc(sizeof(double *) * layer_num);  	
 	double **w_err = malloc(sizeof(double *) * (layer_num - 1));
 	if (input == NULL || w_err == NULL || b_err == NULL)
 		EXIT(ENOMEM);
@@ -431,7 +435,7 @@ int batch_train(struct net *net, struct data_pack *data, const double *target,
 	for (int i = 0; i < layer_num - 1; i++) {
 		unsigned int neu_num = net->layers[i + 1].neurous_num;
 		unsigned int link_num = net->links[i].link_num;
-		b_err[i] = calloc(neu_num, sizeof(double));
+		b_err[i + 1] = calloc(neu_num, sizeof(double));
 		w_err[i] = calloc(link_num, sizeof(double));
 		if (b_err[i] == NULL || w_err[i] == NULL)
 			EXIT(ENOMEM);
@@ -451,10 +455,10 @@ int batch_train(struct net *net, struct data_pack *data, const double *target,
 		net_cacu_err(net, b_err, w_err);
 	}
 
-	net_update(net, b_err, w_err, speed);
+	net_update(net, b_err, w_err, speed / batch_size);
 	
 	for (int i = 0; i < layer_num - 1; i++) {
-		free(b_err[i]);
+		free(b_err[i + 1]);
 		free(w_err[i]);
 	}
 	free(b_err);

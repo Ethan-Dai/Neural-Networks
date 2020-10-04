@@ -5,4 +5,10 @@ obj :=	main.c \
 	mnist.c \
 
 default:
-	gcc $(obj) -o nn -O4 -lm
+	gcc $(obj) -o nn -O4 -lm -static
+
+# for memory debug
+mtrace:
+	gcc $(obj) -o nn -O4 -lm -g
+	./nn
+	mtrace nn mem.log

@@ -11,14 +11,14 @@ Neural Networks and Deep Learning
 
 # 参考：
 
-1. [Neural Networks and Deep Learning]http://neuralnetworksanddeeplearning.com/
+1. [Neural Networks and Deep Learning](http://neuralnetworksanddeeplearning.com/)
 
 为什么只有一个？懂的都懂，不懂说了也白说  
 
 
 # 准确率
 
-以[MNIST]http://yann.lecun.com/exdb/mnist/ 提供的数据训练和测试，当前最高正确率高达：**85%**！  
+以[MNIST](http://yann.lecun.com/exdb/mnist/)提供的数据训练和测试，当前最高正确率高达：**85%**！  
 这意味着成功识别身份证号码(没有X)的概率约为：5%  
 
 # 待更新

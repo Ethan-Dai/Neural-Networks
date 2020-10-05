@@ -39,19 +39,19 @@ int net_setup(struct net *net, const unsigned int layer_num,
 {
 	net->layer_num = layer_num;
 
-	/* alloc memory for layer structs */
+	/* allocate memory for layer structs */
 	net->layers = 
 		(struct layer *)malloc(layer_num * sizeof(struct layer));
 	if (net->layers == NULL)
 		EXIT(ENOMEM);
 	
-	/* alloc memory for link structs */
+	/* allocate memory for link structs */
 	net->links = 
 		(struct link *)malloc((layer_num - 1) * sizeof(struct link));
 	if (net->links == NULL)
 		EXIT(ENOMEM);
 
-	/* alloc memory for nt, activ and biases */
+	/* allocate memory for nt, activ and biases */
 	for (int i = 0; i < layer_num; i++) {
 
 		struct layer *layer_i = net->layers + i;
@@ -72,7 +72,7 @@ int net_setup(struct net *net, const unsigned int layer_num,
 			EXIT(ENOMEM);
 	}
 
-	/* alloc memory for link's weights */
+	/* allocate memory for link's weights */
 	for (int i = 0; i < layer_num - 1; i++) {
 		struct link *link_i = net->links + i;
 		link_i->prev = net->layers + i;
@@ -127,7 +127,7 @@ void net_print(struct net *net)
 		printf("\nlayer%d end.\n\n", i);
 	}
 
-	/* print the biases value layer by layer */
+	/* print the weights value layer by layer */
 	for (int i = 0; i < net->layer_num - 1; i++) {
 		struct link *link_i = net->links + i;
 		printf("link%d : %d weights.\n", i, link_i->link_num);
@@ -210,7 +210,7 @@ int net_load(struct net *net, char *path)
 			break;
 	}
 	
-	/* read biases from the file layer by layer*/		
+	/* read biases from the file layer by layer*/
 	for (int i = 0; i < layer_num; i++) {
 		ret = 1;
 		int neu_num;
@@ -233,7 +233,7 @@ int net_load(struct net *net, char *path)
 	}
 
 	
-	/* read weights from the file layer by layer*/		
+	/* read weights from the file layer by layer*/
 	for (int i = 0; i < net->layer_num - 1; i++) {
 		ret = 1;
 		int link_num;
@@ -291,9 +291,9 @@ double sigmoid_func(double x)
 double sigmoid_prime_func(double x)
 {
 
-	return sigmoid_func(x) * (1 - sigmoid_func(x));
-	//double temp = (1.0+exp(-x));
-        //return exp(-x) / (temp * temp);
+	//return sigmoid_func(x) * (1 - sigmoid_func(x));
+	double temp = (1.0+exp(-x));
+        return exp(-x) / (temp * temp);
 }
 
 
@@ -302,21 +302,19 @@ void net_init(struct net *net, enum activ_mode activ_mode)
 	printf("Start initialize the neural network...  ");
 	clock_t start_time = clock();
 
-	/* Initialize the biases and weights */
-
-	for (int i = 1; i < net->layer_num; i++) {
-		struct layer *layer_i = net->layers + i;
+	/* Initialize the bias and weight, not including 
+						the bias of the first layer */
+	for (int i = 0; i < net->layer_num - 1; i++) {
+		struct layer *layer_i = net->layers + i + 1;
 		for (int j = 0; j < layer_i->neurous_num; j++)
 			layer_i->biases[j] = guass_rand();
-	}
 
-	for (int i = 0; i < net->layer_num - 1; i++) {
 		struct link *link_i = net->links + i;
 		for (int j = 0; j < link_i->link_num; j++)
 			link_i->weights[j] = guass_rand();
 	}
 
-	/* initialize the activi and fb_table */
+	/* Initialize the activation mode and functions*/
 	net->activ_mode = activ_mode;
 	
 	switch (net->activ_mode) {

@@ -4,6 +4,13 @@
 #include <stdbool.h>
 #include "mnist.h"
 
+/*
+ * struct layer - descriptor of layers in the neural networks
+ * @neurous_num:	number of neurons
+ * @nt:			neurotransmitter received by neuron
+ * @activ:		neuron activation
+ * @biases:		basal concentration of neurotransmitter
+ */
 struct layer {
 	unsigned int neurous_num;
 	double *nt;       //neurotransmitters
@@ -11,6 +18,14 @@ struct layer {
 	double *biases;
 };
 
+/* 
+ * struct link - descriptor of the links between two layers
+ * @prev:	the previous layer that the link connected
+ * @next:	the next layer that the link connected
+ * @link_num:	the number of links
+ * @weights:	Used to describe the influence of the previous layer on the 
+ 		next layer
+ */
 struct link {
 	struct layer *prev;
 	struct layer *next;
@@ -30,9 +45,9 @@ enum activ_mode {
  * @layer_num:		the numbel of layers that the net contains
  * @layers:		layers in the net
  * @links:		the connections between TWO layers
- * @activ_mode:	the mode that neurous work on
- * @activ_func:	activation function
- * @fb_func:		derivative of the activation function, used to feedback.
+ * @activ_mode:		the mode that neurous work on
+ * @activ_func:		activation function
+ * @fb_func:		derivative of the activation function, used to feedback
  */
 struct net {
 	unsigned int layer_num;

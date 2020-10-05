@@ -1,0 +1,13 @@
+#! /bin/sh
+
+mem_debug() {
+	echo "Start memory debug"
+	make mtrace
+	export MALLOC_TRACE=mem.log
+	./nn
+	mtrace ./nn $MALLOC_TRACE
+}
+
+
+mem_debug
+

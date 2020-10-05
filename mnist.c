@@ -14,8 +14,8 @@ int read_chars(unsigned char *buff, int len, FILE *file)
 	return 0;
 }
 
-
-int read_data(struct data_pack *pack, const char *img_path, const char *label_path)
+int read_data(struct data_pack *pack, const char *img_path,
+							const char *label_path)
 {
 	unsigned char img_head[16];
 	unsigned char label_head[8];
@@ -47,9 +47,10 @@ int read_data(struct data_pack *pack, const char *img_path, const char *label_pa
 		exit(-EINVAL);
 	}
 	
-	/* number of images and labels */
+	/* the number of images and labels */
 	if (r32b(img_head + 4) != r32b(label_head + 4)) {
-		printf("file: %s and file: %s nort match!\n", img_path, label_path);
+		printf("file: %s and file: %s nort match!\n",
+							img_path, label_path);
 		exit(-EINVAL);
 	} else {
 		pack->img_num = r32b(img_head + 4);

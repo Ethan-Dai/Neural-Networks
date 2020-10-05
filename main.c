@@ -2,8 +2,6 @@
 #include "net.h"
 #include "mnist.h"
 
-//#define MTRACE
-
 #ifdef MTRACE
 #include <mcheck.h>
 #endif
@@ -47,7 +45,7 @@ int main(void)
 	read_data(&test_data, test_images_path, test_labels_path);
 	
 	
-	net_train(&net, &train_data, score, 10, 1.0, 1);
+	net_train(&net, &train_data, score, 10, 0.5, 1);
 	
 	float correct_rate = net_pack_test(&net, &test_data);
 	printf("Correct rate : %.2f %% \n", correct_rate * 100);

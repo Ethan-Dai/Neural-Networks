@@ -210,7 +210,7 @@ int net_load(struct net *net, char *path)
 			break;
 	}
 	
-	/* read biases from the file layer by layer*/
+	/* read biases from the file layer by layer */
 	for (int i = 0; i < layer_num; i++) {
 		ret = 1;
 		int neu_num;
@@ -233,7 +233,7 @@ int net_load(struct net *net, char *path)
 	}
 
 	
-	/* read weights from the file layer by layer*/
+	/* read weights from the file layer by layer */
 	for (int i = 0; i < net->layer_num - 1; i++) {
 		ret = 1;
 		int link_num;

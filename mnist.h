@@ -16,7 +16,7 @@ int read_data(struct data_pack *pack, const char *img_path, const char *label_pa
 
 void mnist_del(struct data_pack *data_pack);
 
-void mnist_print(struct data_pack *pack, unsigned int index);
+int mnist_print(struct data_pack *pack, unsigned int index);
 
 int net_load_mnist(struct data_pack *pack, unsigned int index, double *net_input, unsigned int input_size);
 #endif /* MNIST_H */

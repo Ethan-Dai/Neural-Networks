@@ -81,7 +81,7 @@ void mnist_del(struct data_pack *data_pack)
 }
 
 
-void mnist_print(struct data_pack *pack, unsigned int index)
+int mnist_print(struct data_pack *pack, unsigned int index)
 {
 	struct img *img = pack->imgs + index;
 	printf("label: %d", img->label);
@@ -90,8 +90,8 @@ void mnist_print(struct data_pack *pack, unsigned int index)
 		if (i % 28 == 27)
 			printf("\n");
 	}
+	return img->label;
 }
-
 
 int net_load_mnist(struct data_pack *pack, unsigned int index,
 			double *net_input, unsigned int input_size)

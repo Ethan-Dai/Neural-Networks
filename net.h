@@ -88,6 +88,9 @@ int net_work(struct net *net, struct data_pack *data, int index, bool detail);
 /* Test the network with multiple sets of data */
 float net_pack_test(struct net *net, struct data_pack *data);
 
+/* Test the network interactively */
+int net_interactive_test(struct net *net, struct data_pack *data);
+
 /* Save network activation(error) data to a file, usually for debugging */
 int net_activ_save(struct net *net, char *path);
 

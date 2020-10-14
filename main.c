@@ -38,25 +38,19 @@ int main(void)
 	struct data_pack train_data, test_data;
 	net_setup(&net, 3, neu_num);
 	
-	//net_init(&net, sigmoid);
-	net_load(&net, "net89");
+	net_init(&net, sigmoid);
+	//net_load(&net, "net90");
 	
 	read_data(&train_data, train_images_path, train_labels_path);
 	read_data(&test_data, test_images_path, test_labels_path);
 	
-	
-	net_train(&net, &train_data, score, 10, 0.5, 1);
-	
+	net_train(&net, &train_data, score, 10, 3.0, 7);
 	float correct_rate = net_pack_test(&net, &test_data);
 	printf("Correct rate : %.2f %% \n", correct_rate * 100);
-
-	if(correct_rate > 0.90)
+	if (correct_rate > 0.95)
 		net_save(&net, "net");
-	//net_work(&net, &train_data, 0, true);
-	
-	//mnist_print(&train_data, 0);
-	
-	//net_activ_save(&net, "activ");
+
+	//net_interactive_test(&net, &test_data);
 
 	net_del(&net);
 	mnist_del(&train_data);

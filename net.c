@@ -122,7 +122,7 @@ void net_print(struct net *net)
 			printf("\nlayer%d end.\n\n", i);
 			continue;
 		}
-		for(int j = 0; j < layer_i->neurous_num; j++)
+		for (int j = 0; j < layer_i->neurous_num; j++)
 			printf("%f ", layer_i->biases[j]);
 		printf("\nlayer%d end.\n\n", i);
 	}
@@ -163,7 +163,7 @@ int net_save(struct net *net, char *path)
 			fprintf(file, "\nlayer%d end.\n\n", i);
 			continue;
 		}
-		for(int j = 0; j < layer_i->neurous_num; j++)
+		for (int j = 0; j < layer_i->neurous_num; j++)
 			fprintf(file, "%.16lf ", layer_i->biases[j]);
 		fprintf(file, "\nlayer%d end.\n\n", i);
 	}
@@ -192,15 +192,15 @@ int net_load(struct net *net, char *path)
 	/* check the layer num */
 	int layer_num, ret;
 	ret = fscanf(file, "layer num: %d \n", &layer_num);
-	if(ret != 1)
+	if (ret != 1)
 		goto wrong_format;
-	if(layer_num != net->layer_num)
+	if (layer_num != net->layer_num)
 		goto incompatiable;
 	
 	/* set the activ_mode of net */
 	int activ_mode;
 	ret = fscanf(file, "activation mode: %d\n\n",&activ_mode);
-	if(ret != 1)
+	if (ret != 1)
 		goto wrong_format;
 	net->activ_mode = activ_mode;
 	switch (net->activ_mode) {
@@ -216,7 +216,7 @@ int net_load(struct net *net, char *path)
 		int neu_num;
 		struct layer *layer_i = net->layers + i;
 		ret *= fscanf(file, "layer%d : %d biases.\n", &i, &neu_num); 
-		if(neu_num != layer_i->neurous_num)
+		if (neu_num != layer_i->neurous_num)
 			goto incompatiable;
 		if (i == 0) {
 			ret += fscanf(file,
@@ -224,11 +224,11 @@ int net_load(struct net *net, char *path)
 			ret *= fscanf(file, "\nlayer%d end.\n\n", &i);
 			continue;
 		}
-		for(int j = 0; j < layer_i->neurous_num; j++)
+		for (int j = 0; j < layer_i->neurous_num; j++)
 			ret *= fscanf(file, "%lf ", layer_i->biases + j);
 		ret *= fscanf(file, "\nlayer%d end.\n\n", &i);
 
-		if(ret != 2)
+		if (ret != 2)
 			goto wrong_format;
 	}
 
@@ -239,13 +239,13 @@ int net_load(struct net *net, char *path)
 		int link_num;
 		struct link *link_i = net->links + i;
 		ret *= fscanf(file, "link%d : %d weights.\n", &i, &link_num);
-		if(link_num != link_i->link_num)
+		if (link_num != link_i->link_num)
 			goto incompatiable;
 		for (int j = 0; j < link_i->link_num; j++)
 			ret *= fscanf(file, "%lf ", link_i->weights + j);
 		ret *= fscanf(file, "\nlink%d end.\n\n", &i);
 		
-		if(ret != 2)
+		if (ret != 2)
 			goto wrong_format;
 	}
 
@@ -290,10 +290,9 @@ double sigmoid_func(double x)
 /* Derivative of the sigmoid function. */
 double sigmoid_prime_func(double x)
 {
-
-	//return sigmoid_func(x) * (1 - sigmoid_func(x));
-	double temp = (1.0+exp(-x));
-        return exp(-x) / (temp * temp);
+	return sigmoid_func(x) * (1 - sigmoid_func(x));
+	//double temp = (1.0+exp(-x));
+        //return exp(-x) / (temp * temp);
 }
 
 
@@ -361,11 +360,11 @@ void layer_cacu_err(struct net *net, struct link *link,
 {
 	struct layer *layer_n = link->next;
 	struct layer *layer_p = link->prev;
-	for(int i = 0; i < layer_n->neurous_num; i++) {
+	for (int i = 0; i < layer_n->neurous_num; i++) {
 		layer_n->activ[i] *= net->fb_func(layer_n->nt[i]);
 		b_err[i] += layer_n->activ[i];
 
-		for(int j = 0; j < layer_p->neurous_num; j++) {
+		for (int j = 0; j < layer_p->neurous_num; j++) {
 			unsigned int w_index = layer_p->neurous_num * i + j;
 			w_err[w_index] += layer_n->activ[i] * layer_p->activ[j];
 		}
@@ -381,10 +380,9 @@ void layer_trans_err(struct net *net, struct link *link)
 	memset(layer_p->activ, 0, sizeof(double) * layer_p->neurous_num);
 	for (int i = 0; i < layer_p->neurous_num; i++) {
 		for (int j = 0; j < layer_n->neurous_num; j++) {
-			int w_offset = layer_n->neurous_num * j + i;
+			int w_offset = layer_p->neurous_num * j + i;
 			layer_p->activ[i] += w[w_offset] * layer_n->activ[j];
 		}
-		layer_p->activ[i] *= net->fb_func(layer_n->activ[i]);
 	}
 }
 
@@ -401,18 +399,17 @@ void net_cacu_err(struct net *net, double **b_err, double **w_err)
 void net_update(struct net *net, double **b_err, double **w_err, double eta)
 {	
 	int layer_num = net->layer_num;
-	for(int i = 1; i <layer_num; i++) {
+	for (int i = 0; i < layer_num - 1; i++) {
 		/* updata biases */
-		int b_len = net->layers[i].neurous_num;
-		double *biases_i = net->layers[i].biases;
-		double *b_err_i = b_err[i];
-		array_wsub(biases_i, b_err_i, biases_i, eta, b_len);
+		int b_len = net->layers[i + 1].neurous_num;
+		double *biases_i = net->layers[i + 1].biases;
+		array_wsub(biases_i, b_err[i + 1], biases_i, eta, b_len);
 
 		/* updata weights */
-		int w_len = net->layers[i - 1].neurous_num * 
-						net->layers[i].neurous_num;
-		double *weights_i = net->links[i - 1].weights;
-		double *w_err_i = w_err[i -1];
+		int w_len = net->layers[i].neurous_num * 
+						net->layers[i + 1].neurous_num;
+		double *weights_i = net->links[i].weights;
+		double *w_err_i = w_err[i];
 		array_wsub(weights_i, w_err_i, weights_i, eta, w_len);
 	}
 }
@@ -424,7 +421,6 @@ int batch_train(struct net *net, struct data_pack *data, const double *target,
 	unsigned int input_num = net->layers[0].neurous_num;
 	double *input = net->layers[0].activ;
 
-	/* biases in first layer is useless. */
 	double **b_err = malloc(sizeof(double *) * layer_num);  	
 	double **w_err = malloc(sizeof(double *) * (layer_num - 1));
 	if (input == NULL || w_err == NULL || b_err == NULL)
@@ -433,7 +429,9 @@ int batch_train(struct net *net, struct data_pack *data, const double *target,
 	for (int i = 0; i < layer_num - 1; i++) {
 		unsigned int neu_num = net->layers[i + 1].neurous_num;
 		unsigned int link_num = net->links[i].link_num;
+		/* biases in first layer is useless. */
 		b_err[i + 1] = calloc(neu_num, sizeof(double));
+		
 		w_err[i] = calloc(link_num, sizeof(double));
 		if (b_err[i] == NULL || w_err[i] == NULL)
 			EXIT(ENOMEM);
@@ -467,10 +465,10 @@ int batch_train(struct net *net, struct data_pack *data, const double *target,
 void rand_index(unsigned int *index_table, unsigned int len)
 {
 	unsigned int temp;
-	for(int i = 0; i < len; i++)
+	for (int i = 0; i < len; i++)
 		index_table[i] = i;
 
-	for(int i = 0; i < len; i++) {
+	for (int i = 0; i < len; i++) {
 		srand(clock());
 		int index1 = rand() % len;
 		temp = index_table[index1];
@@ -486,13 +484,13 @@ void net_train(struct net *net, struct data_pack *data, const double *target,
 		unsigned int batch_size, double speed, unsigned int times)
 {
 	unsigned int data_num = data->img_num;
-	if(batch_size > data_num)
+	if (batch_size > data_num)
 		EXIT(EINVAL);
 
 	
 	unsigned int *index_table = 
 			(unsigned int *)malloc(data_num * sizeof(unsigned int));
-	if(index_table == NULL)
+	if (index_table == NULL)
 		EXIT(ENOMEM);
 
 	printf("Start training the neural networks...\n");
@@ -516,11 +514,11 @@ void net_train(struct net *net, struct data_pack *data, const double *target,
 	free(index_table);
 }
 
-int net_work(struct net *net, struct data_pack *data, int index, bool detail)
+int net_work(struct net *net, struct data_pack *pack, int index, bool detail)
 {
 	double *input = net->layers[0].activ;
 	unsigned int input_num = net->layers[0].neurous_num;
-	int label = net_load_mnist(data, index, input, input_num);
+	int label = net_load_mnist(pack, index, input, input_num);
 	propagate(net);
 	
 	double *output = net->layers[net->layer_num - 1].activ;
@@ -538,9 +536,9 @@ int net_work(struct net *net, struct data_pack *data, int index, bool detail)
 	return max_label;
 }
 
-float net_pack_test(struct net *net, struct data_pack *data)
+float net_pack_test(struct net *net, struct data_pack *pack)
 {
-	unsigned int data_num = data->img_num;
+	unsigned int data_num = pack->img_num;
 	unsigned int right = 0;
 	int label, out;
 
@@ -548,8 +546,8 @@ float net_pack_test(struct net *net, struct data_pack *data)
 	printf("right/tested:\n");
 	clock_t start_time = clock();
 	for (int i = 0; i < data_num; i++) {
-		label = data->imgs[i].label;
-		out = net_work(net, data, i, false);
+		label = pack->imgs[i].label;
+		out = net_work(net, pack, i, false);
 		if (out == label)
 			right ++;
 		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b");
@@ -561,4 +559,23 @@ float net_pack_test(struct net *net, struct data_pack *data)
 	printf("\nTesting completed! Used time: %.2f S.\n", used_time);
 	
 	return (float)right / data_num;
+}
+
+
+int net_interactive_test(struct net *net, struct data_pack *pack)
+{
+	unsigned int index;
+	printf("Please enter the index of the image you want to test: ");
+	int ret = scanf("%d", &index);
+	if (ret != 1 || index >= pack->img_num) {
+		printf("Can't set the index!\n");
+		return -EINVAL;
+	}
+	printf("The lable and image of input is: \n");
+	int label = mnist_print(pack, index);
+	int predict = net_work(net, pack, index, true);
+	if ( predict == label)
+		printf("Correct! \n");
+	else
+		printf("Wrong! \n");
 }

@@ -18,8 +18,8 @@ Neural Networks and Deep Learning
 
 # 准确率
 
-以[MNIST](http://yann.lecun.com/exdb/mnist/)提供的数据训练和测试，当前最高正确率高达：**89%**！  
-这意味着成功识别身份证号码(不含X)的概率约为：12%  
+以[MNIST](http://yann.lecun.com/exdb/mnist/)提供的数据训练和测试，当前最高正确率高达：**95%**！  
+这意味着成功识别身份证号码(不含X)的概率约为：40%  
 
 # 待更新
 
